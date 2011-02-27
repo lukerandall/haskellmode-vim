@@ -1,0 +1,470 @@
+" part of haskell plugins: http://projects.haskell.org/haskellmode-vim
+" please send patches to <claus.reinke@talk21.com>
+
+---- file list
+
+compiler/ghc.vim
+ftplugin/haskell.vim
+ftplugin/haskell_doc.vim
+ftplugin/haskell_hpaste.vim
+autoload/haskellmode.vim
+doc/haskellmode.txt
+
+---- open issues/feature requests
+
+- ghc.vim: BufEnter or FileType event for compiler autocommand?
+           support <range>_t for typing expressions?
+           in _ie, don't assume single-line import statements, use Haskell_GatherImport?
+           augment _lang by context-sensitive completion within {-# LANGUAGE #-}
+           should we provide easier access to our .ghci :grep within vim
+              (suggested by Marc Weber)?
+           would be great for performance if we could reuse a single GHCi
+             session, in spite of :help design-not..
+
+- haskell_doc.vim: merge import lines per module?
+                   provide context-sensitive completion for import statements?
+                      (complete module names only first, ideally also only
+                      available imports later)
+
+- haskell.vim: do something about 'iskeyword', or at least about ctrl-];
+               Bram seems unwilling to accomodate languages that require 
+               more flexible iskeyword specifications, so we'd need to 
+               implement our own workarounds:-(
+
+- use the new  find-module/package search, -fobject-code, ghc-paths,
+  :show packages
+
+- expand CamelCase matching to other completions
+
+- skip menues of length one (Scott Dillard); that should probably be
+  optional, and needs factoring out of the menu code from various places
+
+- should we use :emenu .. <C-Z> instead of our home-brewn popup replacement
+  for console-mode vim in haskell_doc.vim as well?
+
+- haskell_hpaste.vim: support browsing of annotations, as well as older pastes
+                      restore posting for new hpaste.org setup
+
+- can we get back support for non-local docs? (issue: DocIndex reads from
+    various package locations, and bakes those in to avoid confusion on
+    index lookup; it can't easily read from non-local sources, but it could
+    bake in non-local references instead of the local ones - if it can easily
+    guess those references..)
+
+- longer term: start thinking about performance, eg, non-linear searches,
+    or relocating some code to haskell helpers (including the building of
+    the haddock index file, and the gathering of ghc-version info - the
+    former processes a lot of data, the latter doesn't need to be done
+    again and again, with a new shell process each time). some of these
+    helpers would run at install time, but might have to be rerun if
+    ghc/libraries change, others would run at edit time, replacing 
+    'ghc -e' with a dedicated ghc-api client (then we could get more
+    detailed type info as well, for local bindings, by traversing the
+    typechecked ast into a nested variant of the current b:ghc_types).
+
+---- change log
+
+22.01.2011
+  ghc.vim:        FIX #24: limit QuickFixCmdPost to compiler ghc
+
+11.12.2010
+  haskell_doc:    be slightly more forgiving in finding insert positions
+                    for Import (_i,_im,_iq,_iqm)
+                  package info in haddock index is optional (not present
+                    in old-style generated index)
+  autoload/haskellmode: reduce whitespace collected by GatherImports
+
+06.12.2010
+  haskell_doc:     our new haddock index generator adds package information to
+                    module names; adapt Haddock,Import,Qualify,IDoc,
+                    MkHaddockModuleIndex
+
+17.11.2010
+  haskell_doc:     with GHC-7.0.1, the format of Haddock HTML-index files has
+                    changed - adapt our scraping code (ProcessHaddockIndexes3);
+                    in future, try switching to the new Haddock API
+                    (http://trac.haskell.org/haddock/ticket/157), even if that
+                    means adding Haskell tools to haskellmode
+
+18.09.2010
+  autoload/haskellmode.vim: fix fileformat to unix
+
+10.09.2010
+  ghc.vim:         be more helpful in _t if type is unknown
+
+22.06.2010
+  ghc.vim:         start caching GHC configuration info (supported languages
+                   and options) instead of asking GHC for every editing session (#8)
+  haskellmode.vim: allow for import {-# SOURCE #-} in haskellmode#GatherImports
+                   (suggested by dmitri shkurko)
+
+18.06.2010
+  ghc.vim:         don't trigger GHC_BrowseAll() from within GHC_TypeBalloon,
+                   as that ties a potentially long-running task to mouse
+                   motion; instead, just point to :GHGReload if necessary (#14)
+
+17.06.2010
+  haskell_doc.vim: minor path changes for ghc-6.12.*
+  ghc.vim:         sort OPTIONS_GHC and LANGUAGE pragma menues (suggested by mkrauskopf)
+
+02/05/2009
+  haskellmode.txt: mention b:ghc_staticoptions, provide example for setting default 
+                    options (extra import path)
+
+30/04/2009
+  ghc.vim:         #9: leave completeopt at default values (though I recommend menu,menuone)
+  haskell_doc.vim: #9: leave completeopt at default values (though I recommend menu,menuone)
+                   replace not-yet documented g:haskell_avoid_singleton_menus with 
+                    checking for absence of menuone in completeopt, for consistency
+                    (only in _?, so far; TODO: shortcut other haskellmode menus if
+                     menuone is missing and there is only one menu entry)
+
+28/04/2009
+  haskell.vim: use setlocal instead of set
+               use suffixesadd instead of hardcoding a single suffix into includeexpr
+                (suggested by Simon Hengel)
+
+24/04/2009
+  haskell_doc.vim: make list of search engines configurable (g:haskell_search_engines)
+                   hayoo! doesn't like qualified names, need to split Data.List.length
+                    into 'length+module:Data.List'
+                   hoogle doesn't like qualified symbols, need to split 
+                    Control.Monad.>>= into 'enc(>>=)+enc(+)Control.Monad'
+                   translate qualifiers for import qualified as into multi-module searches
+                    for hoogle and hayoo!
+                   
+23/04/2009
+  haskellmode.vim: add haskellmode#UrlEncode
+  haskell_doc.vim: move 'file://' prefix from g:haddock_browser_callformat
+                    to DocBrowser - it wasn't users doing any good at that
+                    level, accidentally omitting the prefix causes some
+                    browsers to add an extra level or url-encoding (causing
+                    lookup failures), and we want to be able to support
+                    non-local browsing, too (where the extra prefix is in the way)
+                   add Hoogle and Hayoo! lookup (suggested by Magnus Therning)
+  haskellmode.txt: document _?1 (Hoogle) and _?2 (Hayoo!) lookup.
+
+22/04/2009
+  haskellmode.txt: we need 'filetype plugin on', not just 'filetype on'
+                    (spotted by Philip Craig)
+
+21/04/2009
+  haskellmode.vim: move common functionality into new autoload script
+  ghc.vim:         switch to using haskellmode# functions instead of Haskell_ 
+  haskell_doc.vim: switch to using haskellmode# functions instead of Haskell_ 
+  haskell.vim:     Haskell_ functions have been moved to haskellmode#
+  haskellmode.txt: explicitly mention 'filetype on', 'syntax on'
+                   move GHC_StaticOptions from Settings section (where it obscured
+                    more basic info) to GHC section (where it is easier to see)
+
+15/04/2009
+  haskell_doc.vim: for _., remove duplicates in non-gui version as well, and
+                    in gui version, add separator between imported and non-imported 
+
+15/04/2009
+  haskell_doc.vim: fix ticket #5 - it turns out that the 04/04/ fix of _? fixed 
+                    one use case while breaking another; the logic there was getting
+                    too complicated and fragile; now somewhat straightened out (no
+                    more indirection via IDoc, no more separate indices for keys with
+                    or without namespace tag, simplified conditions, comments clarify
+                    what should happen when, ..); tested with qualified/unqualified
+                    items, qualified/qualfied as/unqualified imports, imported and
+                    non-imported items; please test _? and report any issues with 
+                    the rewritten code
+                   while in the area, make a start on the popular request of
+                    allowing to skip singleton menues, in _? 
+                    (let g:haskell_avoid_singleton_menus=1)
+
+13/04/2009
+  haskellmode.txt: point to http://www.haskell.org/ghc/docs/ for documentation
+                    tarballs (not everyone is using latest)
+
+10/04/2009
+  haskellmode.txt: point to new screencasts, not old screenshots
+
+10/04/2009
+  haskell.vim: in Haskell_GatherImport, match for '^import\s' to avoid
+                false matches (importNot, import'Neither) (spotted by 
+                Matthijs Kooijman)
+  ghc.vim: use preview window for output of _si instead of just echo
+  haskellmode.txt: document _si change
+
+07/04/2009
+  ghc.vim/haskell_doc.vim: fix GHC_VersionGE (stop comparing when greater
+                            digit found) (spotted by Matthijs Kooijman)
+
+  haskell_doc.vim: in DocIndex, when calling 'ghc-pkg field * haddock-html',
+                     escape '*' when &shell=~'sh' (unix-style shell vs windows
+                     cmd.exe and the like) (spotted by Matthijs Kooijman)
+                   when looking for 'ghc-pkg field base haddock-html', ignore
+                     any but the first base we find (spotted by Matthijs Kooijman)
+
+07/04/2009
+  haskell_hpaste.vim: it seems that hpaste.org has changed its layout, invalidating
+                        the hpaste code here! since noone told me, I assume noone is
+                        using this feature anymore (I'm not on IRC myself)? I've fixed 
+                        up the read side, so one can get the index and read individual 
+                        pastes, but posting is disabled for now (just needs someone to 
+                        upgrade the code to hpaste's current fastcgi interface).
+
+04/04/2009
+  haskell_doc.vim: when narrowing choices by qualifier for _?, take
+                     lookup index from un-narrowed list (else we could
+                     end up in the docs for the wrong module)
+
+02/04/2009
+  ghc.vim: actually, we can try to make a reasonable guess at the parent
+            type for constructors in _ie, from their type signature
+
+01/04/2009
+  ghc.vim: try a bit harder to escape " and ' in :GHCi
+           eliminate duplicates in _ie and mark data constructor imports
+             as ???(Cons) - we can't reliably figure out the parent type
+             for the constructor:-(
+           handle Prelude as special case in _ie (can't just comment out
+             import, need to import [qualified] Prelude [as X]() )
+
+  haskell_doc.vim: fix keys (no namespace tags) and urls (modules) for :MDoc
+
+31/03/2009
+  all files: new home page at projects.haskell.org
+
+28/03/2009
+  haskell_doc.vim: in ProcessHaddockIndexes2, fix a case where making new entries
+                    could lose old ones (eg, zipWith's base package locations got
+                    lost when adding its vector package locations) 
+
+07/12/2008
+  haskell_doc.vim: since we're now reading from multiple haddock indices in
+                    DocIndex, we need to extend, not overwrite entries..
+
+03/12/2008
+  ghc.vim: do not reset b:ghc_static_options on every reload
+
+21/10/2008
+  haskell_doc.vim: more places were haddock namespace tags ([t]: type-level;
+                   [v]: value-level) need to be ignored: completion, haddock
+                   lookup for qualified names
+
+08/10/2008
+  haskell.vim: in Haskell_GatherImports, don't use undefined vars in implicit
+                  Prelude imports
+
+07/10/2008
+  haskell_doc.vim: since we now add haddock namespace tags to haddock_index keys
+                    ([t]: type-level;[v]: value-level), we need to remove them
+                    where they play no role (Import/Qualify)
+
+30/09/2008
+  haskell_doc.vim: in ProcessHaddockIndexes, concatenating lines is too slow (this
+                    isn't Haskell); process lines directly instead
+
+22/09/2008
+  haskell_doc.vim: in DocIndex, process doc-index.html as well, in case it holds 
+                    the full index inplace, rather than pointers to per-letter indices
+
+31/07/2008
+  haskell.vim: Haskell_GatherImports: more helpful import parse error, and be more
+                forgiving about trailing characters
+
+19/07/2008
+  haskell_doc.vim: haddock_browser_callformat: protect against spaces in url (windows)
+                   DocIndex: try to process addon libraries as well (had to change quite
+                      a few places and formats, please report any bugs arising!)
+
+18/07/2008
+  haskell_doc.vim: in Haddock(), bypass special treatment of qualified ids
+                    if there is no matching qualified import
+                   in Qualify(), suggest matching qualified imports first
+                   add _iq/_iqm, for qualified imports
+  haskell.vim: in Haskell_GatherImports(), fill out implicit Prelude entries
+
+06/07/2008
+  ghc.vim: errorformat - we cannot distinguish multiline errors/warnings 
+            by their first line!-( fix errorformat to assume errors, then
+            ignore warning-only entries in GHC_CountErrors; also get rid
+            of empty messages (all but the first, apparently..)
+
+05/07/2008
+  ghc.vim: do not throw away b:ghc_types unless we actually have something
+            new to replace it with (move from GHC_BrowseAll to GHC_Process*)
+
+04/07/2008
+  ghc.vim: errorformat - recognize both errors and warnings
+           :make/:GHCReload - don't let warnings stop us, if there are no errors
+           use :emenu instead of :popup if not has("gui_running"), giving 
+            commandline completion for _opt/_lang; makes things work again 
+            in non-gui vims (Tristan Allwood)
+           fill ]OPTIONS_GHC menu from GHCi :set (if ghc_version>=6.8.2),
+            that is partly why I added that output after all!-) (Tristan Allwood)
+
+12/06/2008
+  haskell_doc.vim: Import (_i/_im) - both LANGUAGE and OPTIONS need to be at the top
+
+16/06/2008
+  haskell_doc.vim: avoid follow-on errors if HaddockIndexLookup returns 0
+
+12/06/2008
+  haskell_doc.vim: improve search patterns for Import (_i/_im)
+
+10/06/2008
+  ghc.vim: don't try to repopulate b:ghc_types unless something has changed
+           add :GHCStaticOptions, so that we can add things like '-package ghc'..
+  haskellmode.txt: document :GHCStaticOptions
+
+02/06/2008
+  ghc.vim: use the new :browse! (if ghc_version>="6.8.1"); gets back type info
+            for class methods and data constructors, and provides qualifiers
+            according to qualified imports
+           do not delete existing b:ghc_types (Scott Dillard)
+  haskell.vim: fix modulePat in Haskell_GatherImports to permit Singletons (Scott Dillard)
+               expand Haskell_GatherImports to make it a little more accurate,
+                adding list helpers Haskell_ListElem, Haskell_ListIntersect,
+                Haskell_ListUnion, Haskell_ListWithout; in particular, account
+                for virtual modules composed of multiple 'qualified as Virtual'
+  haskell_doc.vim: in Haddock, use Haskell_GatherImports to offer haddocks for
+                    virtual modules (import qualified as Virtual, suggested by Scott Dillard)
+
+11/04/2008
+  haskell_doc.vim: fix pattern for qualified names in CompleteHaddock (fixes D.M.f)
+                   only try CamelCase if no prefix matches
+
+10/04/2008
+  haskell_doc.vim: add CamelCase matching for ctrl-x_ctrl-u (todo: fix D.M.f)
+                      (suggested by Marc Weber, but in addition to uppercase
+                      letters, we also use module qualifier separators '.' 
+                      for disambiguation, and anchor shortcuts at start of
+                      string and after '.')
+                      pSL -> putStrLn
+                      C.M.MP -> Control.Monad.MonadPlus
+
+09/04/2008
+  haskell_doc.vim: extract index lookup
+                   fix MDoc (have module index rather than index)
+
+04/12/2007
+  ghc.vim: use --numeric-version instead of --version
+           if ghc>=6.8, offer supported languages menu, _lang
+
+02/12/2007
+  haskell_doc.vim: try to use the same g:ghc everywhere..
+                   introduce g:ghc_pkg, derive from g:ghc, to get same version
+                   location of haddocks has moved on windows with 6.8..
+
+06/11/2007
+  haskell_doc.vim: add :FlagReference command, for direct access to
+                    sections in the user guide's flag reference
+  haskellmode.txt: document :FlagReference command
+
+05/11/2007
+  haskellmode.txt: mention LocalLeader in Settings section 2.2
+
+03/11/2007
+  ghc.vim: change :b to :browse, for 6.8.1 has stolen :b for breakpoints..
+
+19/10/2007
+  ghc.vim: in GHC_NameCurrent, drop trailing [ (] from module header pattern
+  ghc.vim, haskell_doc.vim: use maplocalleader behind the scenes, for those
+            who asked for it (but stick to _ default, if not defined, and 
+            keep _ in help, to avoid confusing others:-)
+
+08/09/2007
+  haskell_doc.vim: in _., escape \ in lhs and rhs
+
+21/08/2007
+  haskell.vim: add Haskell_GatherImports, separately recording qualified 
+                  and unqualified imports, as well as 'hiding', 'as', and
+                  explicitly listed ids
+               add Haskell_GatherImport, collecting import statements spread
+                  over multiple lines by counting parens
+  ghc.vim: switch from GHC_GatherImports to Haskell_GatherImports
+           when processing GHCi output for types, prepare to take qualified
+             imports into account, record conflicting types for unqualified ids
+             (arising from incomplete parsing of import statements..)
+           show conflicting types in _t/_T/balloon; if available, use multiline
+             baloon to show conflicting types
+           browse only current module for types, using *<module> gives types
+             for all imports, including qualified imports, but for class
+             methods and data constructors..
+
+20/08/2007
+  haskell.vim: in Haskell_GetNameSymbol, handle symbolic ids starting with .
+  ghc.vim: abort processing of GHCi output in case of errors (we should 
+              deprecate direct calls to :GHGReload in favour of :make)
+           add a simplistic :GHCi command, to run commands/expressions in current module
+  haskell_doc.vim: some symbolic ids need escaping, if embedded in commands
+                   in Qualify, escape '.' in search patterns, '|' in amenu command
+                   in Haddock, escape '|' in amenu command
+                   in Import, escape '|' in amenu command
+  haskellmode.txt: add quick reference
+
+19/08/2007
+  haskell.vim: extend Haskell_GetNameSymbol to handle qualified ids,
+                 pass lines instead of bufnr/lineno,
+                 adapt calls in haskell_doc.vim and ghc.vim
+  haskell_doc.vim: support _i/_im for qualified ids as well
+                   support _? for qualified ids (direct lookup, no menu needed)
+                   in _., suppress highlighting of internal search&replace 
+                   support completion of both qualified and unqualified ids 
+  ghc.vim: support _si for qualified ids as well
+           take qualifiers into account for _t/_T/GHC_TypeBalloon
+  haskell_hpaste.vim: avoid need for manual <cr> after ,p by adding a separate
+                        function/command HpasteEditEntry
+
+18/08/2007
+  haskell.vim: generalise Haskell_GetNameSymbol to Haskell_BufGetNameSymbol
+  ghc.vim: initialize b:ghc_types *before* haskell_functions cutoff
+           have GHC_TypeBalloon use Haskell_BufGetNameSymbol
+  haskell_doc.vim: in function Import, drop one level of escapes in no-gui version;
+                     use '' instead of "" to reduce number of \ in both versions
+
+17/08/2007
+  ghc.vim: add basic :GHCi command
+           add _ie, using :make errors to make import lists explicit
+  haskell_doc.vim: add parens when using _i on symbolic id
+                   refine defaults for g:haddock_browser_callformat, to use
+                     foreground browsing only when no gui is running
+
+14/08/2007
+  ghc.vim: add missing s in -fno-mono-pat-binds
+  haskellmode.txt: reorganize slightly and adapt to current version. 
+                   still needs more work (such as a quickreference)
+
+12/08/2007
+  haskellmode.txt: integrate initial help file provided by Alex Tarkovsky.
+                   reorganize slightly and adapt to current version. needs 
+                   more work (such as a quickreference)
+  haskell_doc.vim: have :ExportDocIndex call HaveIndex()
+
+09/08/2007
+  haskell_doc.vim: consider $HOME for g:haddock_indexfiledir before giving up
+                   terminate script if g:haddock_indexfiledir can't be found
+                   fix missing let when setting s:docdir
+  haskell_hpaste.vim: dos2unix was confused by an embedded ctrl-v ctrl-m, 
+                        splitting a line, which causes UseVimball to omit
+                        the final endfunction..
+                      converting vimballs to unix by hand for now, next
+                        version of vimball will do that automatically..
+
+07/08/2007
+  haskell_doc.vim: avoid quotes for :Doc parameters as well
+                   add g:haddock_moduleindex
+                   add :MDoc <qual>, for module documentation, with completion
+
+06/08/2007
+  haskell.vim: generalise Haskell_GetNameSymbol to take lnum/col parameters
+                 move error message to calls
+                 adapt calls in ghc.vim and haskell_doc.vim
+  ghc.vim: use Haskell_GetNameSymbol for GHC_TypeBalloon
+           restore (?) _t for symbols by adding parens
+           update b:ghc_types after successful :make
+
+05/08/2007
+  haskell_doc.vim: added g:haddock_indexfiledir
+                   added g:haddock_docdir
+                   fix field setting (extra '\n', missing '/')
+  ghc.vim: remove '\n' from g:ghc_version
+
+01/08/2007 
+  ghc.vim: added initial GHC_TypeBalloon
+
