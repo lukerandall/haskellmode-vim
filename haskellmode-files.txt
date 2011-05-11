@@ -64,6 +64,9 @@ doc/haskellmode.txt
 
 ---- change log
 
+11.05.2011
+  haskell_doc:    Add haskell_browser_nosilent options
+
 22.01.2011
   ghc.vim:        FIX #24: limit QuickFixCmdPost to compiler ghc
 
