@@ -184,7 +184,17 @@ CONTENTS                                                         *haskellmode*
 >
         :let g:haddock_browser_callformat = '%s file://%s '.printf(&shellredir,'/dev/null').' &'
 <
+                                                  *g:haddock_browser_nosilent*
+
+    If you find that on your system opening the documentation browser corrupts
+    the vim display, you can choose to not exec the browser silently. This
+    often fixes the display but means you have to press a key to continue
+    after opening the browser.
+>
+        :let g:haddock_browser_nosilent = 1
+<
                                                             *g:haddock_docdir*
+
     Your system's installed Haddock documentation for GHC and its libraries
     should be automatically detected. If the plugin can't locate them, you
     must point |g:haddock_docdir| to the path containing the master index.html
