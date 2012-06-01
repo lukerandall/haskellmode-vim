@@ -104,7 +104,7 @@ doc/haskellmode.txt
 18.06.2010
   ghc.vim:         don't trigger GHC_BrowseAll() from within GHC_TypeBalloon,
                    as that ties a potentially long-running task to mouse
-                   motion; instead, just point to :GHGReload if necessary (#14)
+                   motion; instead, just point to :GHCReload if necessary (#14)
 
 17.06.2010
   haskell_doc.vim: minor path changes for ghc-6.12.*
@@ -393,7 +393,7 @@ doc/haskellmode.txt
 20/08/2007
   haskell.vim: in Haskell_GetNameSymbol, handle symbolic ids starting with .
   ghc.vim: abort processing of GHCi output in case of errors (we should 
-              deprecate direct calls to :GHGReload in favour of :make)
+              deprecate direct calls to :GHCReload in favour of :make)
            add a simplistic :GHCi command, to run commands/expressions in current module
   haskell_doc.vim: some symbolic ids need escaping, if embedded in commands
                    in Qualify, escape '.' in search patterns, '|' in amenu command
