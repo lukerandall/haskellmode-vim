@@ -183,6 +183,7 @@ function! DocBrowser(url)
   else
     silent exe '!'.printf(g:haddock_browser_callformat,g:haddock_browser,escape(url,'#%')) 
   endif
+  redraw!
 endfunction
 
 "Doc/Doct are an old interface for documentation lookup
