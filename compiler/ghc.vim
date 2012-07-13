@@ -130,10 +130,10 @@ if has("balloon_eval")
       let pname = name " ( symb ? '('.name.')' : name )
       if b:ghc_types == {} 
         redraw
-        echo "no type information (try :GHGReload)"
+        echo "no type information (try :GHCReload)"
       elseif (b:my_changedtick != b:changedtick)
         redraw
-        echo "type information may be out of date (try :GHGReload)"
+        echo "type information may be out of date (try :GHCReload)"
       endif
       " silent call GHC_HaveTypes()
       if b:ghc_types!={}
