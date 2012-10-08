@@ -2,7 +2,7 @@
 " use haddock docs and index files
 " show documentation, complete & qualify identifiers 
 "
-" (Claus Reinke; last modified: 11/12/2010)
+" (Claus Reinke; last modified: 17/06/2009)
 " 
 " part of haskell plugins: http://projects.haskell.org/haskellmode-vim
 " please send patches to <claus.reinke@talk21.com>
@@ -38,7 +38,6 @@ let s:scriptname = "haskell_doc.vim"
 " script parameters
 "   g:haddock_browser            *mandatory* which browser to call
 "   g:haddock_browser_callformat [optional] how to call browser
-"   g:haddock_browser_nosilent   [optional] don't exec the browser silently
 "   g:haddock_indexfiledir       [optional] where to put 'haddock_index.vim'
 "   g:haddock_docdir             [optional] where to find html docs
 "   g:ghc                        [optional] which ghc to call
@@ -178,12 +177,7 @@ function! DocBrowser(url)
   endif
   " start browser to open url, according to specified format
   let url = a:url=~'^\(file://\|http://\)' ? a:url : 'file://'.a:url
-  if (exists("g:haddock_browser_nosilent") && g:haddock_browser_nosilent)
-    exe '!'.printf(g:haddock_browser_callformat,g:haddock_browser,escape(url,'#%')) 
-  else
-    silent exe '!'.printf(g:haddock_browser_callformat,g:haddock_browser,escape(url,'#%')) 
-  endif
-  redraw!
+  silent exe '!'.printf(g:haddock_browser_callformat,g:haddock_browser,escape(url,'#%')) 
 endfunction
 
 "Doc/Doct are an old interface for documentation lookup
@@ -257,7 +251,7 @@ function! IDoc(name,...)
   let choices = HaddockIndexLookup(a:name)
   if choices=={} | return | endif
   if a:0==0
-    let keylist = map(deepcopy(keys(choices)),'substitute(v:val,"\\[.\\]\\( (.*)\\)\\?","","")')
+    let keylist = map(deepcopy(keys(choices)),'substitute(v:val,"\\[.\\]","","")')
     let choice = inputlist(keylist)
   else
     let choice = a:1
@@ -531,7 +525,7 @@ function! MkHaddockModuleIndex()
     for module in keys(dict)
       let html = dict[module]
       let html   = substitute(html  ,'#.*$','','')
-      let module = substitute(module,'\[.\]\( (.*)\)\?','','')
+      let module = substitute(module,'\[.\]','','')
       let ml = matchlist(html,'libraries/\([^\/]*\)[\/]')
       if ml!=[]
         let [_,package;x] = ml
@@ -587,7 +581,7 @@ function! Haddock()
   if dict=={} | return | endif
   " for qualified items, narrow results to possible imports that provide qualifier
   let filteredKeys = filter(copy(keys(dict))
-                         \ ,'match(asm,substitute(v:val,''\[.\]\( (.*)\)\?'','''',''''))!=-1') 
+                         \ ,'match(asm,substitute(v:val,''\[.\]'','''',''''))!=-1') 
   let keys = (qual!='') ?  filteredKeys : keys(dict)
   if (keys==[]) && (qual!='')
     echoerr qual.'.'.unqual.' not found in imports'
@@ -599,7 +593,7 @@ function! Haddock()
         call DocBrowser(dict[keys[0]])
   elseif has("gui_running")
     for key in keys
-      exe 'amenu ]Popup.'.escape(key,'\. ').' :call DocBrowser('''.dict[key].''')<cr>'
+      exe 'amenu ]Popup.'.escape(key,'\.').' :call DocBrowser('''.dict[key].''')<cr>'
     endfor
     popup ]Popup
   else
@@ -791,7 +785,7 @@ function! Qualify()
   let prefix       = (start<=1 ? '' : getline(line)[0:start-2] )
   let dict   = HaddockIndexLookup(name)
   if dict=={} | return | endif
-  let keylist = map(deepcopy(keys(dict)),'substitute(v:val,"\\[.\\]\\( (.*)\\)\\?","","")')
+  let keylist = map(deepcopy(keys(dict)),'substitute(v:val,"\\[.\\]","","")')
   let imports = haskellmode#GatherImports()
   let qualifiedImports = []
   for qualifiedImport in keys(imports[1])
@@ -829,19 +823,9 @@ function! Qualify()
   endif
 endfunction
 
-function! FindImportPosition()
-  let save_cursor = getpos(".")
-  let line1 = search('\%1c\(\<import\>\|\<module\>\|{-# OPTIONS\|{-# LANGUAGE\)','b')
-  " jump over possible multiline statements
-  let line2 = search('^\(\s*\|\S.*\)$','')
-  call setpos('.', save_cursor)
-  " insert position is after statement, before any following declarations
-  return ( line2 > line1 ? line2-1 : line1 )
-endfunction
-
 " create (qualified) import for a (qualified) name
-" TODO: - refine search patterns, to avoid misinterpretation of
-"         oddities like import'Neither or not'module
+" TODO: refine search patterns, to avoid misinterpretation of
+"       oddities like import'Neither or not'module
 map <LocalLeader>i :call Import(0,0)<cr>
 map <LocalLeader>im :call Import(1,0)<cr>
 map <LocalLeader>iq :call Import(0,1)<cr>
@@ -862,7 +846,7 @@ function! Import(module,qualified)
   let qualified  = a:qualified ? 'qualified ' : ''
 
   if qual!=''
-    exe 'call append(FindImportPosition(),''import '.qualified.qual.importlist.''')'
+    exe 'call append(search(''\%1c\(\<import\>\|\<module\>\|{-# OPTIONS\|{-# LANGUAGE\)'',''nb''),''import '.qualified.qual.importlist.''')'
     return
   endif
 
@@ -870,17 +854,18 @@ function! Import(module,qualified)
   let prefix = getline(line)[0:start-1]
   let dict   = HaddockIndexLookup(name)
   if dict=={} | return | endif
-  let keylist = map(deepcopy(keys(dict)),'substitute(v:val,"\\[.\\]\\( (.*)\\)\\?","","")')
+  let keylist = map(deepcopy(keys(dict)),'substitute(v:val,"\\[.\\]","","")')
   if has("gui_running")
     for key in keylist
-      exe 'amenu ]Popup.'.escape(key,'\.').' :call append(FindImportPosition(),''import '.qualified.key.escape(importlist,'|').''')<cr>'
+      " exe 'amenu ]Popup.'.escape(key,'\.').' :call append(search("\\%1c\\(import\\\\|module\\\\|{-# OPTIONS\\)","nb"),"import '.key.importlist.'")<cr>'
+      exe 'amenu ]Popup.'.escape(key,'\.').' :call append(search(''\%1c\(\<import\>\\|\<module\>\\|{-# OPTIONS\\|{-# LANGUAGE\)'',''nb''),''import '.qualified.key.escape(importlist,'|').''')<cr>'
     endfor
     popup ]Popup
   else
     let s:choices = keylist
     let key = input('import '.name.' from: ','','customlist,CompleteAux')
     if key!=''
-      exe 'call append(FindImportPosition(),''import '.qualified.key.importlist.''')'
+      exe 'call append(search(''\%1c\(\<import\>\|\<module\>\|{-# OPTIONS\|{-# LANGUAGE\)'',''nb''),''import '.qualified.key.importlist.''')'
     endif
   endif
 endfunction
