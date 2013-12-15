@@ -55,7 +55,7 @@ endif
 " associate type map updates to changedtick
 if !exists("b:ghc_types")
   let b:ghc_types = {}
-  let b:my_changedtick = b:changedtick
+  let b:my_changedtick = -1
 endif
 
 if exists("g:haskell_functions")
