@@ -224,8 +224,8 @@ CONTENTS                                                         *haskellmode*
     To shorten the time it takes to browse the symbols you can enable caching of
     the symbol data to a background file every time |:GHCReload| is called. When 
     browsing for a symbol, if the symbol table is empty and cached file is 
-    available, it is used to populate the symbol table. To enable the symbol cache
-    set the following variable to 1:
+    available, it is used to populate the symbol table. To enable the symbol 
+    cache set the following variable to 1:
 >
         :let g:ghc_symbolcache=1
 <
