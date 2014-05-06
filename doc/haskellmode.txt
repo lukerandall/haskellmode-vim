@@ -167,7 +167,7 @@ CONTENTS                                                         *haskellmode*
     liking, you probably won't need to do any fine tuning.
 
                                                 *g:haddock_browser_callformat*
-    By default, the web browser|g:haddock_browser| will be started
+    By default, the web browser |g:haddock_browser| will be started
     asynchronously (in the background) on Windows or when vim is running in a
     GUI, and synchronously (in the foreground) otherwise. These settings seem
     to work fine if you are using a console mode browser (eg, when editing in
@@ -216,6 +216,15 @@ CONTENTS                                                         *haskellmode*
     is in your PATH):
 >
         :let g:wget="C:\Program Files\wget\wget.exe"
+<
+                                                    *g:haskellmode_completion*
+    By default, haskellmode sets omnifunc and completefunc to a GHC-based
+    completion of imported symbols and completion from Haddock, respectively.
+    If you want to turn these off (e.g. if you're using necoghc or an
+    autocomplete system like YCM or neocomplete), use:
+>
+       :let g:haskellmode_completion_ghc=0
+       :let g:haskellmode_completion_haddock=0
 <
 
     Finally, the mappings actually use|<LocalLeader>|behind the scenes, so if

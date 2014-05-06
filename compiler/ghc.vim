@@ -382,7 +382,14 @@ function! GHC_CompleteImports(findstart, base)
     return res
   endif
 endfunction
-set omnifunc=GHC_CompleteImports
+
+if !exists("g:haskellmode_completion_ghc")
+  let g:haskellmode_completion_ghc = 1
+endif
+
+if g:haskellmode_completion_ghc != 0
+    set omnifunc=GHC_CompleteImports
+endif
 "
 " Vim's default completeopt is menu,preview
 " you probably want at least menu, or you won't see alternatives listed
