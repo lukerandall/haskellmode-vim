@@ -184,7 +184,17 @@ CONTENTS                                                         *haskellmode*
 >
         :let g:haddock_browser_callformat = '%s file://%s '.printf(&shellredir,'/dev/null').' &'
 <
+                                                  *g:haddock_browser_nosilent*
+
+    If you find that on your system opening the documentation browser corrupts
+    the vim display, you can choose to not exec the browser silently. This
+    often fixes the display but means you have to press a key to continue
+    after opening the browser.
+>
+        :let g:haddock_browser_nosilent = 1
+<
                                                             *g:haddock_docdir*
+
     Your system's installed Haddock documentation for GHC and its libraries
     should be automatically detected. If the plugin can't locate them, you
     must point |g:haddock_docdir| to the path containing the master index.html
@@ -202,10 +212,22 @@ CONTENTS                                                         *haskellmode*
 <
                                                                       *g:wget*
     If you also want to try the experimental hpaste functionality, you might
-    you need to set |g:wget| before the |hpaste| plugin is loaded (unless wget
+    need to set |g:wget| before the |hpaste| plugin is loaded (unless wget
     is in your PATH):
 >
         :let g:wget="C:\Program Files\wget\wget.exe"
+<
+
+    Another experimental functionality is caching the symbol information to a
+    background file. If you are importing big modules such as OpenGL, loading
+    the symbol information from GHCi by |:GHCReload| can take really long time. 
+    To shorten the time it takes to browse the symbols you can enable caching of
+    the symbol data to a background file every time |:GHCReload| is called. When 
+    browsing for a symbol, if the symbol table is empty and cached file is 
+    available, it is used to populate the symbol table. To enable the symbol 
+    cache set the following variable to 1:
+>
+        :let g:ghc_symbolcache=1
 <
 
     Finally, the mappings actually use|<LocalLeader>|behind the scenes, so if
