@@ -108,7 +108,7 @@ if !exists('s:docdir') || !isdirectory(s:docdir)
   elseif isdirectory(location2)
     let s:docdir = location2
   else " give up
-    echoerr s:scriptname." can't find locaton of html documentation (set g:haddock_docdir)."
+    echoerr s:scriptname." can't find location of html documentation (set g:haddock_docdir)."
     finish
   endif
 endif
