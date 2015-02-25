@@ -30,8 +30,8 @@ execute 'setlocal makeprg=' . g:ghc . '\ ' . escape(b:ghc_staticoptions,' ') .'\
 " fetch file/line-info from error message
 " TODO: how to distinguish multiline errors from warnings?
 "       (both have the same header, and errors have no common id-tag)
-"       how to get rid of first empty message in result list?
 setlocal errorformat=
+                    \%-G,
                     \%-Z\ %#,
                     \%W%f:%l:%c:\ Warning:\ %m,
                     \%E%f:%l:%c:\ %m,
