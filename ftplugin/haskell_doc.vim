@@ -418,7 +418,7 @@ function! ProcessHaddockIndexes2(location,files)
           let [_,module;x] = ml 
           let [_,kind;x]   = matchlist(isLink,kindPat)
           let last         = a:location[strlen(a:location)-1]
-          let link[module."[".kind."]"] = a:location . (last=='/'?'':'/') . isLink
+          let link[module."[".kind."]"] = isLink
           let isLink='' 
           continue 
         endif

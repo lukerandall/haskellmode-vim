@@ -30,8 +30,8 @@ execute 'setlocal makeprg=' . g:ghc . '\ ' . escape(b:ghc_staticoptions,' ') .'\
 " fetch file/line-info from error message
 " TODO: how to distinguish multiline errors from warnings?
 "       (both have the same header, and errors have no common id-tag)
-"       how to get rid of first empty message in result list?
 setlocal errorformat=
+                    \%-G,
                     \%-Z\ %#,
                     \%W%f:%l:%c:\ Warning:\ %m,
                     \%E%f:%l:%c:\ %m,
@@ -64,7 +64,7 @@ endif
 let g:haskell_functions = "ghc"
 
 " avoid hit-enter prompts
-set cmdheight=3
+"set cmdheight=3
 
 " edit static GHC options
 " TODO: add completion for options/packages?
