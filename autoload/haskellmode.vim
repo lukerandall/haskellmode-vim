@@ -157,14 +157,16 @@ endfunction
 " TODO: we could have buffer-local settings, at the expense of
 "       reconfiguring for every new buffer.. do we want to?
 function! haskellmode#GHC()
-  if (!exists("g:ghc") || !executable(g:ghc)) 
-    if !executable('ghc') 
+  if (!exists("g:ghc") || !executable(g:ghc))
+    if executable('ghc')
+      let g:ghc = 'ghc'
+    elseif executable('stack')
+      let g:ghc = substitute(system('stack path --compiler-exe'),'\n','','')
+    else
       echoerr s:scriptname.": can't find ghc. please set g:ghc, or extend $PATH"
       return 0
-    else
-      let g:ghc = 'ghc'
     endif
-  endif    
+  endif
   return 1
 endfunction
 
