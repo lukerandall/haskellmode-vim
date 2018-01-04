@@ -100,13 +100,16 @@ if !exists('s:docdir') || !isdirectory(s:docdir)
   let s:ghc_libdir = substitute(system(g:ghc . ' --print-libdir'),'\n','','')
   let location1a = s:ghc_libdir . '/doc/html/'
   let location1b = s:ghc_libdir . '/doc/'
-  let location2 = '/usr/share/doc/ghc-' . haskellmode#GHC_Version() . '/html/' 
+  let location2a = '/usr/share/doc/ghc-' . haskellmode#GHC_Version() . '/html/'
+  let location2b = '/usr/share/doc/ghc-doc/html'
   if isdirectory(location1a)
     let s:docdir = location1a
   elseif isdirectory(location1b)
     let s:docdir = location1b
-  elseif isdirectory(location2)
-    let s:docdir = location2
+  elseif isdirectory(location2a)
+    let s:docdir = location2a
+  elseif isdirectory(location2b)
+let s:docdir = location2b
   else " give up
     echoerr s:scriptname." can't find location of html documentation (set g:haddock_docdir)."
     finish
